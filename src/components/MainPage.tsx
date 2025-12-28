@@ -1,5 +1,6 @@
 import { Search, User as UserIcon, LogOut, Ticket, Calendar, MapPin, Gift } from 'lucide-react';
 import type {Show, User} from "../models/ticket-model.ts";
+import {useMemo, useState} from "react";
 
 interface MainPageProps {
     shows: Show[];
@@ -12,6 +13,17 @@ interface MainPageProps {
 }
 
 export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick, onEventsClick, onLogout }: MainPageProps) {
+    const [searchText, setSearchText] = useState<string>('');
+    const onChangeSearchText = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchText(e.target.value);
+    };
+
+    const showList = useMemo(() => {
+        const q = searchText.trim();
+        if (!q) return shows;
+        return shows.filter(show => show.title.includes(q));
+    }, [searchText, shows]);
+
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -75,6 +87,8 @@ export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick
                                 type="text"
                                 placeholder="공연명, 배우명으로 검색하세요"
                                 className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm sm:text-base"
+                                onChange={onChangeSearchText}
+                                value={searchText}
                             />
                         </div>
                     </div>
@@ -99,7 +113,7 @@ export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    {shows.map(show => (
+                    {showList.map(show => (
                         <div
                             key={show.id}
                             onClick={() => onShowClick(show.id)}
