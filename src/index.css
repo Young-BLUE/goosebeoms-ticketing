@@ -1,5 +1,1 @@
 @import "tailwindcss";
-
-body { background: lime !important; }
-
-.test-tailwind-check { background: red !important; color: white !important; }
