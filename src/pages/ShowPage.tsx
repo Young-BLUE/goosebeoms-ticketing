@@ -5,7 +5,7 @@ import {useApp} from "../contexts/AppContexts.tsx";
 export function ShowPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
-    const { shows, user, addBooking } = useApp();
+    const { shows, user } = useApp();
 
     const show = shows.find((s) => s.id === Number(id));
 
@@ -30,7 +30,7 @@ export function ShowPage() {
             show={show}
             user={user}
             onBack={() => navigate('/')}
-            onBooking={addBooking}
+            onBooking={() => navigate(`/show/${id}/booking`)}
             onLoginClick={() => navigate('/login')}
         />
     );

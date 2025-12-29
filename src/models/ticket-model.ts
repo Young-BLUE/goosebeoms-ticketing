@@ -28,7 +28,7 @@ export interface Booking {
     showId: number;
     showTitle: string;
     showImage: string;
-    date: string;
+    date: Date|null;
     time: string;
     seats: string[];
     totalPrice: number;

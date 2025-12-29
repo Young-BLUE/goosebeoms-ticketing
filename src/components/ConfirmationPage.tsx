@@ -11,7 +11,7 @@ export function ConfirmationPage({ bookingData, onRestart }: ConfirmationPagePro
     const { couponCode, selectedSeats = [], showTime = '19:00', showTitle = '뮤지컬 <해밀턴>' } = bookingData;
     const totalPrice = selectedSeats.length * 50000;
     const finalPrice = totalPrice * 0.7;
-    const bookingNumber = `BK${dayjs().format("YYYYMMDD")}`;
+    const bookingNumber = `BK${dayjs().format('YYYY-MM-DD')}`;
     const bookingDate = new Date().toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',

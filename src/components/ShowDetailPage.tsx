@@ -10,7 +10,7 @@ interface ShowDetailPageProps {
     show: Show;
     user: User | null;
     onBack: () => void;
-    onBooking: (booking: Booking) => void;
+    onBooking: () => void;
     onLoginClick: () => void;
 }
 
@@ -18,8 +18,6 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
     const [showCouponModal, setShowCouponModal] = useState(false);
     const [claimedCoupon, setClaimedCoupon] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-    const [selectedTime, setSelectedTime] = useState('19:30');
-    const [selectedSeats, setSelectedSeats] = useState(2);
 
     const handleCouponClaim = (couponCode: string) => {
         setClaimedCoupon(couponCode);
@@ -32,26 +30,7 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
             return;
         }
 
-        const basePrice = 120000;
-        const totalBeforeDiscount = basePrice * selectedSeats;
-        const discount = claimedCoupon ? (show.couponDiscount || 0) / 100 : 0;
-        const totalPrice = totalBeforeDiscount * (1 - discount);
-
-        const booking: Booking = {
-            id: `BK${Date.now()}`,
-            showId: show.id,
-            showTitle: show.title,
-            showImage: show.image,
-            date: selectedDate,
-            time: selectedTime,
-            seats: Array.from({ length: selectedSeats }, (_, i) => `A${i + 1}`),
-            totalPrice,
-            bookingDate: new Date().toISOString(),
-        };
-
-        onBooking(booking);
-        alert('예매가 완료되었습니다!');
-        onBack();
+        onBooking();
     };
 
     return (
@@ -97,7 +76,7 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                                         <div className="flex items-center gap-2 sm:gap-3">
                                             <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-green-900 text-sm sm:text-base">쿠폰 발급 완료!</div>
+                                                <div className="text-green-900 text-sm sm:text-base">쿠�� 발급 완료!</div>
                                                 <div className="text-xs sm:text-sm text-green-700">
                                                     {show.couponDiscount}% 할인 쿠폰이 적용됩니다
                                                 </div>
@@ -218,8 +197,6 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                                 <div>
                                     <label className="block text-xs sm:text-sm text-gray-600 mb-2">시간</label>
                                     <select
-                                        value={selectedTime}
-                                        onChange={(e) => setSelectedTime(e.target.value)}
                                         className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                                     >
                                         <option value="14:00">14:00</option>
@@ -232,8 +209,6 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                                 <div>
                                     <label className="block text-xs sm:text-sm text-gray-600 mb-2">인원</label>
                                     <select
-                                        value={selectedSeats}
-                                        onChange={(e) => setSelectedSeats(Number(e.target.value))}
                                         className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                                     >
                                         <option value="1">1명</option>
@@ -248,14 +223,14 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                                 <div className="flex justify-between mb-2 text-sm sm:text-base">
                                     <span className="text-gray-600">기본 금액</span>
                                     <span className="text-gray-900">
-                    {(120000 * selectedSeats).toLocaleString()}원
+                    {(120000 * 2).toLocaleString()}원
                   </span>
                                 </div>
                                 {claimedCoupon && (
                                     <div className="flex justify-between mb-2 text-sm sm:text-base">
                                         <span className="text-gray-600">할인 ({show.couponDiscount}%)</span>
                                         <span className="text-red-500">
-                      -{(120000 * selectedSeats * (show.couponDiscount || 0) / 100).toLocaleString()}원
+                      -{(120000 * 2 * (show.couponDiscount || 0) / 100).toLocaleString()}원
                     </span>
                                     </div>
                                 )}
@@ -263,7 +238,7 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                                     <span className="text-gray-900">최종 결제금액</span>
                                     <span className="text-purple-600">
                     {(
-                        120000 * selectedSeats * (1 - (claimedCoupon ? (show.couponDiscount || 0) / 100 : 0))
+                        120000 * 2 * (1 - (claimedCoupon ? (show.couponDiscount || 0) / 100 : 0))
                     ).toLocaleString()}원
                   </span>
                                 </div>

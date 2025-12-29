@@ -32,7 +32,7 @@ export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick
                     <div className="flex items-center justify-between gap-2 sm:gap-4">
                         <div className="flex items-center gap-1.5 sm:gap-2">
                             <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
-                            <h1 className="text-purple-600 text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap">뮤지컬 티켓</h1>
+                            <h1 className="text-purple-600 text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap">구스범스 티켓</h1>
                         </div>
 
                         <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
@@ -157,7 +157,7 @@ export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
                         <div>
-                            <h4 className="text-white mb-3 sm:mb-4 text-base sm:text-lg">뮤지컬 티켓</h4>
+                            <h4 className="text-white mb-3 sm:mb-4 text-base sm:text-lg">구스범스 티켓</h4>
                             <p className="text-xs sm:text-sm">
                                 최고의 공연을 가장 편리하게<br />
                                 예매하세요
@@ -180,7 +180,7 @@ export function MainPage({ shows, user, onShowClick, onLoginClick, onMyPageClick
                         </div>
                     </div>
                     <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
-                        © 2024 뮤지컬 티켓. All rights reserved.
+                        © 2024 구스범스 티켓. All rights reserved.
                     </div>
                 </div>
             </footer>
