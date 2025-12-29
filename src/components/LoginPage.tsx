@@ -28,12 +28,16 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
                 alert('이메일과 비밀번호를 입력해주세요');
                 return;
             }
-            // Demo login
-            onLogin({
-                name: email.split('@')[0],
-                email,
-                phone: '010-1234-5678'
-            });
+            if (email === 'admin@admin.com' && password === 'admin') {
+                // Demo login
+                onLogin({
+                    name: email.split('@')[0],
+                    email,
+                    phone: '010-1234-5678'
+                });
+            } else {
+                alert('로그인 정보를 확인하세요');
+            }
         }
     };
 

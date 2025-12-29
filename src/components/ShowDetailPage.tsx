@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Gift, X, CheckCircle } from 'lucide-react';
 import { CouponModal } from './CouponModal';
 import type {Booking, Show, User} from "../models/ticket-model.ts";
+import dayjs from "dayjs";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface ShowDetailPageProps {
     show: Show;
@@ -14,7 +17,7 @@ interface ShowDetailPageProps {
 export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: ShowDetailPageProps) {
     const [showCouponModal, setShowCouponModal] = useState(false);
     const [claimedCoupon, setClaimedCoupon] = useState<string | null>(null);
-    const [selectedDate, setSelectedDate] = useState('2024-12-25');
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [selectedTime, setSelectedTime] = useState('19:30');
     const [selectedSeats, setSelectedSeats] = useState(2);
 
@@ -202,11 +205,13 @@ export function ShowDetailPage({ show, user, onBack, onBooking, onLoginClick }: 
                             <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                                 <div>
                                     <label className="block text-xs sm:text-sm text-gray-600 mb-2">날짜</label>
-                                    <input
-                                        type="date"
-                                        value={selectedDate}
-                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                    <DatePicker
+                                        selected={selectedDate}
+                                        onChange={(date: Date|null) => setSelectedDate(date)}
+                                        dateFormat="yyyy/MM/dd"
+                                        placeholderText="yyyy/MM/dd"
                                         className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                                        wrapperClassName={"w-full"}
                                     />
                                 </div>
 
