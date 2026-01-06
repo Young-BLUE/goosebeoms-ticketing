@@ -7,9 +7,11 @@ interface AppContextType {
     bookings: Booking[];
     shows: Show[];
     events: Event[];
+    showWaitingRoom: boolean;
     setUser: (user: User | null) => void;
     addBooking: (booking: Booking) => void;
     logout: () => void;
+    toggleWaitingRoom: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -17,6 +19,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
+    // 테스트용 대기 화면 표시 여부 (true로 설정하면 대기 화면 표시)
+    const [showWaitingRoom, setShowWaitingRoom] = useState(true);
 
     const addBooking = (booking: Booking) => {
         setBookings([...bookings, booking]);
@@ -26,6 +30,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setUser(null);
     };
 
+    const toggleWaitingRoom = () => {
+        setShowWaitingRoom(!showWaitingRoom);
+    };
+
     return (
         <AppContext.Provider
             value={{
@@ -33,9 +41,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 bookings,
                 shows,
                 events,
+                showWaitingRoom,
                 setUser,
                 addBooking,
                 logout,
+                toggleWaitingRoom,
             }}
         >
             {children}

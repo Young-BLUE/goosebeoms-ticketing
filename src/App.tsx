@@ -6,6 +6,7 @@ import {EventsPageWrapper} from "./pages/EventsPageWrapper.tsx";
 import {MyPageWrapper} from "./pages/MyPageWrapper.tsx";
 import {AppProvider} from "./contexts/AppContexts.tsx";
 import {BookingPage} from "./pages/BookingPage.tsx";
+import {WaitingPage} from "./pages/WaitingPage.tsx";
 
 export function App() {
     return (
@@ -15,6 +16,7 @@ export function App() {
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/show/:id" element={<ShowPage />} />
+                        <Route path="/show/:id/waiting" element={<WaitingPage />} />
                         <Route path="/show/:id/booking" element={<BookingPage />} />
                         <Route path="/login" element={<LoginPageWrapper />} />
                         <Route path="/mypage" element={<MyPageWrapper />} />

@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ShowDetailPage } from '../components/ShowDetailPage';
+import { WaitingRoomPage } from '../components/WaitingRoomPage';
 import {useApp} from "../contexts/AppContexts.tsx";
 
-export function ShowPage() {
+export function WaitingPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
-    const { shows, user, showWaitingRoom } = useApp();
+    const { shows } = useApp();
 
     const show = shows.find((s) => s.id === Number(id));
 
@@ -25,22 +25,10 @@ export function ShowPage() {
         );
     }
 
-    const handleBooking = () => {
-        // showWaitingRoom 설정에 따라 대기 화면 또는 좌석 선택 화면으로 이동
-        if (showWaitingRoom) {
-            navigate(`/show/${id}/waiting`);
-        } else {
-            navigate(`/show/${id}/booking`);
-        }
-    };
-
     return (
-        <ShowDetailPage
+        <WaitingRoomPage
             show={show}
-            user={user}
-            onBack={() => navigate('/')}
-            onBooking={handleBooking}
-            onLoginClick={() => navigate('/login')}
+            onComplete={() => navigate(`/show/${id}/booking`)}
         />
     );
 }
