@@ -1,62 +1,62 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import type {Booking, Show, User, Event} from "../models/ticket-model.ts";
-import {events, shows} from "../models/dummy-model.ts";
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { getMe } from '../api/auth';
+
+export interface AuthUser {
+  email: string;
+  name: string;
+  role: string;
+}
 
 interface AppContextType {
-    user: User | null;
-    bookings: Booking[];
-    shows: Show[];
-    events: Event[];
-    showWaitingRoom: boolean;
-    setUser: (user: User | null) => void;
-    addBooking: (booking: Booking) => void;
-    logout: () => void;
-    toggleWaitingRoom: () => void;
+  user: AuthUser | null;
+  token: string | null;
+  isAuthLoading: boolean;
+  setAuth: (token: string, user: AuthUser) => void;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    // 테스트용 대기 화면 표시 여부 (true로 설정하면 대기 화면 표시)
-    const [showWaitingRoom, setShowWaitingRoom] = useState(true);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-    const addBooking = (booking: Booking) => {
-        setBookings([...bookings, booking]);
-    };
+  useEffect(() => {
+    if (!token) {
+      setIsAuthLoading(false);
+      return;
+    }
+    getMe()
+      .then((me) => setUser({ email: me.email, name: me.name, role: me.role }))
+      .catch(() => {
+        localStorage.removeItem('token');
+        setToken(null);
+      })
+      .finally(() => setIsAuthLoading(false));
+  }, [token]);
 
-    const logout = () => {
-        setUser(null);
-    };
+  const setAuth = (newToken: string, newUser: AuthUser) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(newUser);
+  };
 
-    const toggleWaitingRoom = () => {
-        setShowWaitingRoom(!showWaitingRoom);
-    };
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
 
-    return (
-        <AppContext.Provider
-            value={{
-                user,
-                bookings,
-                shows,
-                events,
-                showWaitingRoom,
-                setUser,
-                addBooking,
-                logout,
-                toggleWaitingRoom,
-            }}
-        >
-            {children}
-        </AppContext.Provider>
-    );
+  return (
+    <AppContext.Provider value={{ user, token, isAuthLoading, setAuth, logout }}>
+      {children}
+    </AppContext.Provider>
+  );
 }
 
 export function useApp() {
-    const context = useContext(AppContext);
-    if (!context) {
-        throw new Error('useApp must be used within AppProvider');
-    }
-    return context;
+  const context = useContext(AppContext);
+  if (!context) throw new Error('useApp must be used within AppProvider');
+  return context;
 }
