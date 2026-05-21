@@ -21,7 +21,7 @@ export function subscribeQueue(
   onError?: (err: Event) => void,
 ): EventSource {
   const token = localStorage.getItem('token');
-  const url = `http://localhost:8080/queue/${scheduleId}/subscribe${token ? `?token=${token}` : ''}`;
+  const url = `http://localhost:8888/queue/${scheduleId}/subscribe${token ? `?token=${token}` : ''}`;
   const es = new EventSource(url);
   const handler = (e: Event) => {
     const data = JSON.parse((e as MessageEvent).data) as QueueStatusResponse;
