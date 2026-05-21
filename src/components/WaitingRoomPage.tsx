@@ -47,8 +47,13 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
           },
         );
         esRef.current = es;
-      } catch {
-        if (!cancelled) setError('대기열 진입에 실패했습니다. 다시 시도해주세요.');
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const e = err as { response?: { status?: number; data?: { message?: string } } };
+          const status = e?.response?.status;
+          const msg = e?.response?.data?.message;
+          setError(msg ?? `대기열 진입 실패 (status: ${status ?? 'network'}). 콘솔 확인.`);
+        }
       }
     }
 

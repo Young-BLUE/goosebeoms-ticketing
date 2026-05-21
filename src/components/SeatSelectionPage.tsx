@@ -14,6 +14,7 @@ interface SeatSelectionPageProps {
 
 export function SeatSelectionPage({
   scheduleId,
+  queueToken,
   onBack,
   onComplete,
 }: SeatSelectionPageProps) {

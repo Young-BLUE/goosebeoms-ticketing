@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { ShowPage } from './pages/ShowPage';
 import { LoginPageWrapper } from './pages/LoginPageWrapper';
@@ -16,7 +16,6 @@ export function App() {
       <AppProvider>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            <Route path="/" element={<HomePage />} />
             <Route path="/show/:id" element={<ShowPage />} />
             <Route path="/show/:id/waiting" element={<WaitingPage />} />
             <Route path="/show/:id/booking" element={<BookingPage />} />
@@ -25,6 +24,8 @@ export function App() {
             <Route path="/login" element={<LoginPageWrapper />} />
             <Route path="/mypage" element={<MyPageWrapper />} />
             <Route path="/events" element={<EventsPageWrapper />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </AppProvider>

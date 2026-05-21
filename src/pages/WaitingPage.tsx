@@ -27,7 +27,7 @@ export function WaitingPage() {
     <WaitingRoomPage
       scheduleId={scheduleId}
       onComplete={(queueToken) =>
-        navigate(`/show/${id}/booking`, { state: { scheduleId, queueToken } })
+        navigate(`/show/${id}/booking`, { state: { scheduleId, queueToken }, replace: true })
       }
       onLeave={() => navigate(`/show/${id}`)}
     />
