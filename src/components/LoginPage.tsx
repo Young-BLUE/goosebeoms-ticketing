@@ -67,8 +67,8 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">
               {isSignUp
-                ? '구스범스 티켓의 새로운 회원이 되어보세요'
-                : '구스범스 티켓에 오신 것을 환영합니다'}
+                ? 'Goosebeoms Ticket의 새로운 회원이 되어보세요'
+                : 'Goosebeoms Ticket에 오신 것을 환영합니다'}
             </p>
           </div>
 

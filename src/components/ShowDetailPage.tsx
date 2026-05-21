@@ -53,11 +53,13 @@ export function ShowDetailPage({
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* 포스터 */}
           <div className="lg:sticky lg:top-24 self-start">
-            <ImageWithFallback
-              src={show.posterUrl}
-              alt={show.title}
-              className="w-full rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl"
-            />
+            <div className="w-full aspect-[2/3] rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl overflow-hidden">
+              <ImageWithFallback
+                src={show.posterUrl}
+                alt={show.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
 
           {/* 상세 정보 */}

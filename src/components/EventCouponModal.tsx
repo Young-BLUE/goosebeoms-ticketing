@@ -146,7 +146,7 @@ export function EventCouponModal({ event, shows, onClose, onClaim }: EventCoupon
                                                 <img
                                                     src={show.image}
                                                     alt={show.title}
-                                                    className="w-10 h-14 sm:w-12 sm:h-16 object-cover rounded flex-shrink-0"
+                                                    className="w-10 sm:w-12 aspect-[2/3] object-cover rounded flex-shrink-0"
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-xs sm:text-sm text-gray-900 truncate">{show.title}</div>

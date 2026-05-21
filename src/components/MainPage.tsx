@@ -49,7 +49,7 @@ export function MainPage({
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
               <h1 className="text-purple-600 text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap">
-                구스범스 티켓
+                Goosebeoms Ticket
               </h1>
             </div>
 
@@ -158,7 +158,7 @@ export function MainPage({
                 onClick={() => onShowClick(show.id)}
                 className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer group"
               >
-                <div className="relative h-64 sm:h-72 md:h-80 overflow-hidden">
+                <div className="relative aspect-[2/3] overflow-hidden">
                   <ImageWithFallback
                     src={show.posterUrl}
                     alt={show.title}
@@ -200,7 +200,7 @@ export function MainPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
-              <h4 className="text-white mb-3 sm:mb-4 text-base sm:text-lg">구스범스 티켓</h4>
+              <h4 className="text-white mb-3 sm:mb-4 text-base sm:text-lg">Goosebeoms Ticket</h4>
               <p className="text-xs sm:text-sm">
                 최고의 공연을 가장 편리하게
                 <br />
@@ -225,7 +225,7 @@ export function MainPage({
             </div>
           </div>
           <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
-            © 2024 구스범스 티켓. All rights reserved.
+            © 2024 Goosebeoms Ticket. All rights reserved.
           </div>
         </div>
       </footer>
