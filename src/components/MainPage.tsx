@@ -1,12 +1,18 @@
-import { Search, User as UserIcon, LogOut, Ticket, MapPin, Gift } from 'lucide-react';
+import { Search, User as UserIcon, LogOut, Ticket, MapPin, Gift, Loader2 } from 'lucide-react';
 import type { ShowResponse } from '../api/types';
 import type { AuthUser } from '../contexts/AppContexts';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageWithFallback } from './handling/ImageWithFallback';
 
 interface MainPageProps {
   shows: ShowResponse[];
   loading: boolean;
+  loadingMore: boolean;
+  isLast: boolean;
+  categories: string[];
+  activeCategory: string;
+  onCategoryChange: (cat: string) => void;
+  onLoadMore: () => void;
   user: AuthUser | null;
   onShowClick: (showId: number) => void;
   onLoginClick: () => void;
@@ -18,6 +24,12 @@ interface MainPageProps {
 export function MainPage({
   shows,
   loading,
+  loadingMore,
+  isLast,
+  categories,
+  activeCategory,
+  onCategoryChange,
+  onLoadMore,
   user,
   onShowClick,
   onLoginClick,
@@ -26,19 +38,27 @@ export function MainPage({
   onLogout,
 }: MainPageProps) {
   const [searchText, setSearchText] = useState('');
-  const [activeCategory, setActiveCategory] = useState('전체');
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const showList = useMemo(() => {
-    let list = shows;
-    if (activeCategory !== '전체') {
-      list = list.filter((s) => s.category === activeCategory);
-    }
     const q = searchText.trim();
-    if (q) list = list.filter((s) => s.title.includes(q));
-    return list;
-  }, [shows, searchText, activeCategory]);
+    if (!q) return shows;
+    return shows.filter((s) => s.title.includes(q));
+  }, [shows, searchText]);
 
-  const categories = ['전체', ...Array.from(new Set(shows.map((s) => s.categoryLabel)))];
+  // 스크롤 끝 감지 → 다음 페이지 로드
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) onLoadMore();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onLoadMore]);
 
   return (
     <div className="min-h-screen">
@@ -123,7 +143,7 @@ export function MainPage({
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => onCategoryChange(cat)}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg whitespace-nowrap text-sm sm:text-base transition-colors ${
                   activeCategory === cat
                     ? 'bg-purple-600 text-white'
@@ -193,6 +213,12 @@ export function MainPage({
             ))}
           </div>
         )}
+
+        {/* 무한스크롤 sentinel — 항상 DOM에 존재해야 Observer가 연결됨 */}
+        <div ref={sentinelRef} className="flex justify-center py-8">
+          {!loading && loadingMore && <Loader2 className="w-8 h-8 animate-spin text-purple-600" />}
+          {!loading && isLast && <p className="text-sm text-gray-400">모든 공연을 불러왔습니다</p>}
+        </div>
       </section>
 
       {/* Footer */}
