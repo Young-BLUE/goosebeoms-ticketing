@@ -78,7 +78,14 @@ export function ShowDetailPage({
             <div className="space-y-3 mb-6 p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700">
                 <MapPin className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                <span>{show.venue}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(show.venue)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline hover:text-black transition-colors"
+                >
+                  {show.venue}
+                </a>
               </div>
               <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700">
                 <Tag className="w-4 h-4 text-purple-600 flex-shrink-0" />
