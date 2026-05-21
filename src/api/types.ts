@@ -19,6 +19,7 @@ export interface ShowResponse {
   title: string;
   venue: string;
   category: string;
+  categoryLabel: string;
   posterUrl: string;
   status: string;
   minPrice: number;

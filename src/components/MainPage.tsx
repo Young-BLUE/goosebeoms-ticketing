@@ -38,7 +38,7 @@ export function MainPage({
     return list;
   }, [shows, searchText, activeCategory]);
 
-  const categories = ['전체', ...Array.from(new Set(shows.map((s) => s.category)))];
+  const categories = ['전체', ...Array.from(new Set(shows.map((s) => s.categoryLabel)))];
 
   return (
     <div className="min-h-screen">

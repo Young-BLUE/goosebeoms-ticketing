@@ -1,1 +1,69 @@
 @import "tailwindcss";
+
+@theme {
+  --color-purple-50:  var(--color-neutral-50);
+  --color-purple-100: var(--color-neutral-100);
+  --color-purple-200: var(--color-neutral-200);
+  --color-purple-300: var(--color-neutral-300);
+  --color-purple-400: var(--color-neutral-400);
+  --color-purple-500: var(--color-neutral-700);
+  --color-purple-600: var(--color-neutral-900);
+  --color-purple-700: var(--color-neutral-950);
+  --color-purple-800: #000000;
+  --color-purple-900: #000000;
+
+  --color-violet-50:  var(--color-neutral-50);
+  --color-violet-100: var(--color-neutral-100);
+  --color-violet-200: var(--color-neutral-200);
+  --color-violet-300: var(--color-neutral-300);
+  --color-violet-400: var(--color-neutral-400);
+  --color-violet-500: var(--color-neutral-700);
+  --color-violet-600: var(--color-neutral-900);
+  --color-violet-700: var(--color-neutral-950);
+  --color-violet-800: #000000;
+  --color-violet-900: #000000;
+
+  --color-indigo-50:  var(--color-neutral-50);
+  --color-indigo-100: var(--color-neutral-100);
+  --color-indigo-200: var(--color-neutral-200);
+  --color-indigo-300: var(--color-neutral-300);
+  --color-indigo-400: var(--color-neutral-400);
+  --color-indigo-500: var(--color-neutral-700);
+  --color-indigo-600: var(--color-neutral-900);
+  --color-indigo-700: var(--color-neutral-950);
+  --color-indigo-800: #000000;
+  --color-indigo-900: #000000;
+
+  --color-fuchsia-50:  var(--color-neutral-50);
+  --color-fuchsia-100: var(--color-neutral-100);
+  --color-fuchsia-200: var(--color-neutral-200);
+  --color-fuchsia-300: var(--color-neutral-300);
+  --color-fuchsia-400: var(--color-neutral-400);
+  --color-fuchsia-500: var(--color-neutral-700);
+  --color-fuchsia-600: var(--color-neutral-900);
+  --color-fuchsia-700: var(--color-neutral-950);
+  --color-fuchsia-800: #000000;
+  --color-fuchsia-900: #000000;
+
+  --color-pink-50:  var(--color-neutral-50);
+  --color-pink-100: var(--color-neutral-100);
+  --color-pink-200: var(--color-neutral-200);
+  --color-pink-300: var(--color-neutral-300);
+  --color-pink-400: var(--color-neutral-400);
+  --color-pink-500: var(--color-neutral-700);
+  --color-pink-600: var(--color-neutral-900);
+  --color-pink-700: var(--color-neutral-950);
+  --color-pink-800: #000000;
+  --color-pink-900: #000000;
+
+  --color-blue-50:  var(--color-neutral-50);
+  --color-blue-100: var(--color-neutral-100);
+  --color-blue-200: var(--color-neutral-200);
+  --color-blue-300: var(--color-neutral-300);
+  --color-blue-400: var(--color-neutral-400);
+  --color-blue-500: var(--color-neutral-700);
+  --color-blue-600: var(--color-neutral-900);
+  --color-blue-700: var(--color-neutral-950);
+  --color-blue-800: #000000;
+  --color-blue-900: #000000;
+}
