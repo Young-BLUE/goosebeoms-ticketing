@@ -42,13 +42,13 @@ export function HomePage() {
       pageRef.current = pageNum;
 
       // 전체 탭에서만 카테고리 목록 갱신 (누적)
-      if (category === '전체') {
-        setCategories((prev) => {
-          const next = new Set(prev);
-          result.content.forEach((s) => next.add(s.category));
-          return ['전체', ...Array.from(next).filter((c) => c !== '전체')];
-        });
-      }
+      // if (category === '전체') {
+      //   setCategories((prev) => {
+      //     const next = new Set(prev);
+      //     result.content.forEach((s) => next.add(s.category));
+      //     return ['전체', ...Array.from(next).filter((c) => c !== '전체')];
+      //   });
+      // }
     } finally {
       if (reset) {
         setLoading(false);
