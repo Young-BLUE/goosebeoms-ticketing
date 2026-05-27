@@ -65,7 +65,7 @@ export function ShowDetailPage({
           {/* 상세 정보 */}
           <div>
             <div className="mb-4 sm:mb-6">
-              <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm mb-2">
+              <span className="inline-block px-3 py-1 bg-brand-soft text-brand-soft-fg rounded-full text-sm mb-2">
                 {show.category}
               </span>
               <h1 className="text-gray-900 mb-2 text-xl sm:text-2xl md:text-3xl lg:text-4xl">
@@ -77,7 +77,7 @@ export function ShowDetailPage({
             {/* 기본 정보 */}
             <div className="space-y-3 mb-6 p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700">
-                <MapPin className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-brand flex-shrink-0" />
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(show.venue)}`}
                   target="_blank"
@@ -88,7 +88,7 @@ export function ShowDetailPage({
                 </a>
               </div>
               <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700">
-                <Tag className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                <Tag className="w-4 h-4 text-brand flex-shrink-0" />
                 <span>
                   {show.minPrice.toLocaleString()}원 ~ {show.maxPrice.toLocaleString()}원
                 </span>
@@ -113,14 +113,14 @@ export function ShowDetailPage({
                         disabled={isSoldOut}
                         className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all text-left ${
                           isSelected
-                            ? 'border-purple-500 bg-purple-50'
+                            ? 'border-brand bg-brand-soft'
                             : isSoldOut
                               ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-                              : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer'
+                              : 'border-gray-200 hover:border-brand-ring hover:bg-brand-soft/50 cursor-pointer'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Calendar className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                          <Calendar className="w-4 h-4 text-brand flex-shrink-0" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">
                               {dayjs(schedule.scheduledAt).format('YYYY년 MM월 DD일 (ddd)')}
@@ -144,7 +144,7 @@ export function ShowDetailPage({
 
             {/* 선택 회차 요약 */}
             {selectedSchedule && (
-              <div className="mb-6 p-3 bg-purple-50 rounded-xl border border-purple-200 text-sm text-purple-800">
+              <div className="mb-6 p-3 bg-brand-soft rounded-xl border border-neutral-200 text-sm text-brand-soft-fg">
                 선택: {dayjs(selectedSchedule.scheduledAt).format('MM/DD HH:mm')} — 잔여{' '}
                 {selectedSchedule.availableCount}석
               </div>
@@ -156,7 +156,7 @@ export function ShowDetailPage({
               disabled={
                 !selectedScheduleId || (selectedSchedule?.availableCount ?? 0) === 0
               }
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg"
+              className="w-full py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg"
             >
               {!user ? '로그인 후 예매하기' : '예매하기'}
             </button>

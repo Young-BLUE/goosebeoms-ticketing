@@ -49,7 +49,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
         </div>
       </header>
 
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-12 sm:py-16">
+      <section className="bg-gradient-to-r from-brand to-accent text-white py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-full mb-3 sm:mb-4">
             <Gift className="w-7 h-7 sm:w-8 sm:h-8" />
@@ -57,7 +57,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
           <h1 className="text-white mb-3 sm:mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl">
             쿠폰 & 혜택
           </h1>
-          <p className="text-purple-100 max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
+          <p className="text-white/80 max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
             다양한 할인 쿠폰을 받아보세요
           </p>
         </div>
@@ -89,7 +89,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
                   key={coupon.id}
                   className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all"
                 >
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-5 text-white">
+                  <div className="bg-gradient-to-r from-brand to-accent p-5 text-white">
                     <div className="flex items-center justify-between mb-2">
                       <span className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs">
                         {coupon.discountType === 'FIXED' ? (
@@ -108,7 +108,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
                         ? `${coupon.discountValue.toLocaleString()}원`
                         : `${coupon.discountValue}%`}
                     </div>
-                    <div className="text-purple-100 text-sm mt-1">{coupon.name}</div>
+                    <div className="text-white/80 text-sm mt-1">{coupon.name}</div>
                   </div>
 
                   <div className="p-5">
@@ -126,7 +126,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${
-                            isLowStock ? 'bg-red-500' : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                            isLowStock ? 'bg-red-500' : 'bg-gradient-to-r from-brand to-accent'
                           }`}
                           style={{ width: `${ratio * 100}%` }}
                         />
@@ -147,7 +147,7 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
                           ? 'bg-green-100 text-green-700 cursor-default'
                           : soldOut
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+                            : 'bg-gradient-to-r from-brand to-accent text-white hover:from-brand-hover hover:to-accent-hover'
                       }`}
                     >
                       {isLoading ? (
@@ -171,9 +171,9 @@ export function EventPage({ coupons, user, onBack, onLoginClick }: EventPageProp
           </div>
         )}
 
-        <div className="mt-12 bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="text-blue-900 mb-3">쿠폰 안내</h3>
-          <ul className="space-y-2 text-sm text-blue-800">
+        <div className="mt-12 bg-accent-soft border border-neutral-200 rounded-xl p-6">
+          <h3 className="text-accent-soft-fg mb-3">쿠폰 안내</h3>
+          <ul className="space-y-2 text-sm text-accent-soft-fg">
             <li>• 쿠폰은 1인 1회 발급이 원칙입니다</li>
             <li>• 발급받은 쿠폰은 좌석 선택 시 적용할 수 있습니다</li>
             <li>• 쿠폰 유효기간이 지나면 자동으로 소멸됩니다</li>

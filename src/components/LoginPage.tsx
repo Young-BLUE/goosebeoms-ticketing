@@ -47,7 +47,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-soft to-accent-soft flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <button
           onClick={onBack}
@@ -59,7 +59,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
 
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full mb-3 sm:mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-brand to-accent rounded-full mb-3 sm:mb-4">
               <UserIcon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
             <h1 className="text-gray-900 mb-2 text-xl sm:text-2xl md:text-3xl">
@@ -90,7 +90,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="홍길동"
-                      className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                      className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -103,7 +103,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="010-1234-5678"
-                      className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                      className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@email.com"
-                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -133,7 +133,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                  className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all text-sm sm:text-base disabled:opacity-60"
+              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-brand to-accent text-white rounded-lg hover:from-brand-hover hover:to-accent-hover transition-all text-sm sm:text-base disabled:opacity-60"
             >
               {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
             </button>
@@ -158,12 +158,12 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
               {isSignUp ? (
                 <>
                   이미 계정이 있으신가요?{' '}
-                  <span className="text-purple-600">로그인</span>
+                  <span className="text-brand">로그인</span>
                 </>
               ) : (
                 <>
                   계정이 없으신가요?{' '}
-                  <span className="text-purple-600">회원가입</span>
+                  <span className="text-brand">회원가입</span>
                 </>
               )}
             </button>

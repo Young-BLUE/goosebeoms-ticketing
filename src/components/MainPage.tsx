@@ -67,8 +67,8 @@ export function MainPage({
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
-              <h1 className="text-purple-600 text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap">
+              <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-brand flex-shrink-0" />
+              <h1 className="text-brand text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap">
                 Goosebeoms Ticket
               </h1>
             </div>
@@ -76,7 +76,7 @@ export function MainPage({
             <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
               <button
                 onClick={onEventsClick}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm sm:text-base"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-brand hover:bg-brand-soft rounded-lg transition-colors text-sm sm:text-base"
               >
                 <Gift className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="hidden sm:inline">이벤트</span>
@@ -101,7 +101,7 @@ export function MainPage({
               ) : (
                 <button
                   onClick={onLoginClick}
-                  className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base whitespace-nowrap"
+                  className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors text-sm sm:text-base whitespace-nowrap"
                 >
                   로그인
                 </button>
@@ -112,12 +112,12 @@ export function MainPage({
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-10 sm:py-16 md:py-20">
+      <section className="bg-gradient-to-r from-brand to-accent text-white py-10 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-white mb-3 sm:mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl">
             지금 가장 인기있는 공연
           </h2>
-          <p className="text-purple-100 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
+          <p className="text-white/80 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
             특별한 순간을 위한 최고의 공연을 만나보세요
           </p>
           <div className="max-w-xl mx-auto px-4">
@@ -126,7 +126,7 @@ export function MainPage({
               <input
                 type="text"
                 placeholder="공연명으로 검색하세요"
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm sm:text-base"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-ring text-sm sm:text-base"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
@@ -146,7 +146,7 @@ export function MainPage({
                 onClick={() => onCategoryChange(cat)}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg whitespace-nowrap text-sm sm:text-base transition-colors ${
                   activeCategory === cat
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-brand text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -197,10 +197,10 @@ export function MainPage({
                   </div>
                 </div>
                 <div className="p-3 sm:p-4">
-                  <h3 className="text-gray-900 mb-1 group-hover:text-purple-600 transition-colors text-base sm:text-lg line-clamp-1">
+                  <h3 className="text-gray-900 mb-1 group-hover:text-brand transition-colors text-base sm:text-lg line-clamp-1">
                     {show.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-purple-600 mb-2">
+                  <p className="text-xs sm:text-sm text-brand mb-2">
                     {show.minPrice.toLocaleString()}원 ~{' '}
                     {show.maxPrice.toLocaleString()}원
                   </p>
@@ -216,7 +216,7 @@ export function MainPage({
 
         {/* 무한스크롤 sentinel — 항상 DOM에 존재해야 Observer가 연결됨 */}
         <div ref={sentinelRef} className="flex justify-center py-8">
-          {!loading && loadingMore && <Loader2 className="w-8 h-8 animate-spin text-purple-600" />}
+          {!loading && loadingMore && <Loader2 className="w-8 h-8 animate-spin text-brand" />}
           {!loading && isLast && <p className="text-sm text-gray-400">모든 공연을 불러왔습니다</p>}
         </div>
       </section>

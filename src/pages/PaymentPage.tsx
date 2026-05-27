@@ -55,8 +55,7 @@ export function PaymentPage() {
       const tossPayments = await loadTossPayments(prepare.clientKey);
       const payment = tossPayments.payment({ customerKey: prepare.customerEmail });
 
-      await payment.requestPayment({
-        method: method === 'CARD' ? 'CARD' : 'VIRTUAL_ACCOUNT',
+      const common = {
         amount: { currency: 'KRW', value: prepare.amount },
         orderId: prepare.orderId,
         orderName: booking.showTitle,
@@ -64,7 +63,14 @@ export function PaymentPage() {
         customerName: prepare.customerName,
         successUrl: `${window.location.origin}/booking/${bookingId}/payment?`,
         failUrl: `${window.location.origin}/booking/${bookingId}/payment`,
-      });
+      };
+
+      // method 리터럴을 정적으로 좁혀야 토스 SDK requestPayment 의 오버로드가 매칭됨
+      if (method === 'CARD') {
+        await payment.requestPayment({ method: 'CARD', ...common });
+      } else {
+        await payment.requestPayment({ method: 'VIRTUAL_ACCOUNT', ...common });
+      }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? '결제 요청에 실패했습니다');
@@ -76,7 +82,7 @@ export function PaymentPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
@@ -86,7 +92,7 @@ export function PaymentPage() {
       <div className="min-h-screen flex items-center justify-center text-center">
         <div>
           <p className="text-red-500 mb-4">{error ?? '예매 정보를 찾을 수 없습니다'}</p>
-          <button onClick={() => navigate('/')} className="px-6 py-3 bg-purple-600 text-white rounded-lg">
+          <button onClick={() => navigate('/')} className="px-6 py-3 bg-brand text-white rounded-lg">
             홈으로
           </button>
         </div>
@@ -127,7 +133,7 @@ export function PaymentPage() {
             )}
             <div className="flex justify-between text-base font-medium border-t pt-2">
               <span className="text-gray-900">최종 결제 금액</span>
-              <span className="text-purple-600">{booking.finalPrice.toLocaleString()}원</span>
+              <span className="text-brand">{booking.finalPrice.toLocaleString()}원</span>
             </div>
           </div>
 
@@ -142,7 +148,7 @@ export function PaymentPage() {
             <button
               onClick={() => handlePay('CARD')}
               disabled={paying}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               신용카드로 결제
@@ -150,7 +156,7 @@ export function PaymentPage() {
             <button
               onClick={() => handlePay('VIRTUAL_ACCOUNT')}
               disabled={paying}
-              className="w-full py-4 border-2 border-purple-600 text-purple-600 rounded-xl hover:bg-purple-50 transition-all disabled:opacity-60"
+              className="w-full py-4 border-2 border-brand text-brand rounded-xl hover:bg-brand-soft transition-all disabled:opacity-60"
             >
               가상계좌로 결제
             </button>

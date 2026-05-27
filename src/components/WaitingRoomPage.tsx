@@ -77,14 +77,14 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-brand-soft via-accent-soft to-brand-soft flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-12 text-center max-w-md w-full">
           <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-gray-900 mb-3">연결 오류</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={onLeave}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-6 py-3 bg-brand text-white rounded-lg hover:bg-brand-hover"
           >
             돌아가기
           </button>
@@ -94,7 +94,7 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-soft via-accent-soft to-brand-soft flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-12 text-center">
           {!isActive ? (
@@ -102,8 +102,8 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
               {/* 로딩 아이콘 */}
               <div className="mb-8">
                 <div className="relative inline-flex">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full blur-xl opacity-50 animate-pulse" />
-                  <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 rounded-full p-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand to-accent rounded-full blur-xl opacity-50 animate-pulse" />
+                  <div className="relative bg-gradient-to-r from-brand to-accent rounded-full p-6">
                     <Loader2 className="w-16 h-16 sm:w-20 sm:h-20 text-white animate-spin" />
                   </div>
                 </div>
@@ -116,10 +116,10 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
 
               {/* 대기 순번 */}
               <div className="mb-8 sm:mb-12">
-                <div className="inline-block bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl px-8 py-6 sm:px-12 sm:py-8">
+                <div className="inline-block bg-gradient-to-r from-brand-soft to-accent-soft rounded-2xl px-8 py-6 sm:px-12 sm:py-8">
                   <div className="text-sm sm:text-base text-gray-600 mb-2">현재 대기 순번</div>
                   {status ? (
-                    <div className="text-5xl sm:text-6xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 tabular-nums">
+                    <div className="text-5xl sm:text-6xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-brand to-accent tabular-nums">
                       {status.position ?? '-'}
                     </div>
                   ) : (
@@ -131,22 +131,22 @@ export function WaitingRoomPage({ scheduleId, onComplete, onLeave }: WaitingRoom
 
               {/* 정보 카드 */}
               <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 sm:p-6">
+                <div className="bg-gradient-to-br from-brand-soft to-brand-soft rounded-xl p-4 sm:p-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-                    <span className="text-sm sm:text-base text-purple-900">예상 대기 시간</span>
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
+                    <span className="text-sm sm:text-base text-brand-soft-fg">예상 대기 시간</span>
                   </div>
-                  <div className="text-2xl sm:text-3xl text-purple-600">
+                  <div className="text-2xl sm:text-3xl text-brand">
                     {status?.etaSeconds != null ? `약 ${Math.ceil(status.etaSeconds / 60)}분` : '—'}
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6">
+                <div className="bg-gradient-to-br from-accent-soft to-accent-soft rounded-xl p-4 sm:p-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                    <span className="text-sm sm:text-base text-blue-900">상태</span>
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
+                    <span className="text-sm sm:text-base text-accent-soft-fg">상태</span>
                   </div>
-                  <div className="text-lg sm:text-xl text-blue-600">
+                  <div className="text-lg sm:text-xl text-accent">
                     {status?.state === 'WAITING' ? '대기 중' : '연결 중...'}
                   </div>
                 </div>

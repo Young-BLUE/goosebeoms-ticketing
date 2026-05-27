@@ -14,7 +14,7 @@ export function WaitingPage() {
           <h1 className="text-gray-900 mb-4">회차 정보가 없습니다</h1>
           <button
             onClick={() => navigate(`/show/${id}`)}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-6 py-3 bg-brand text-white rounded-lg hover:bg-brand-hover"
           >
             공연 상세로 돌아가기
           </button>

@@ -40,7 +40,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
           <p className="text-gray-600 mb-4 text-sm sm:text-base">로그인이 필요합니다</p>
           <button
             onClick={onBack}
-            className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm sm:text-base"
+            className="px-4 sm:px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover text-sm sm:text-base"
           >
             홈으로 가기
           </button>
@@ -82,7 +82,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 lg:sticky lg:top-8">
               <div className="text-center mb-4 sm:mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full mb-3 sm:mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-brand to-accent rounded-full mb-3 sm:mb-4">
                   <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </div>
                 <h2 className="text-gray-900 mb-1 text-lg sm:text-xl md:text-2xl">{user.name}</h2>
@@ -97,12 +97,12 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="bg-purple-50 rounded-lg p-2 sm:p-3 text-center">
-                  <div className="text-xl sm:text-2xl text-purple-600 mb-1">{bookings.length}</div>
+                <div className="bg-brand-soft rounded-lg p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl text-brand mb-1">{bookings.length}</div>
                   <div className="text-xs text-gray-600">예매 내역</div>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-2 sm:p-3 text-center">
-                  <div className="text-xl sm:text-2xl text-blue-600 mb-1">
+                <div className="bg-accent-soft rounded-lg p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl text-accent mb-1">
                     {bookings.reduce((sum, b) => sum + b.seatCount, 0)}
                   </div>
                   <div className="text-xs text-gray-600">관람 티켓</div>
@@ -120,7 +120,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
 
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-brand" />
               </div>
             ) : bookings.length === 0 ? (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-8 sm:p-12 text-center">
@@ -131,7 +131,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
                 </p>
                 <button
                   onClick={onBack}
-                  className="px-4 sm:px-6 py-2.5 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm sm:text-base"
+                  className="px-4 sm:px-6 py-2.5 sm:py-3 bg-brand text-white rounded-lg hover:bg-brand-hover text-sm sm:text-base"
                 >
                   공연 둘러보기
                 </button>
@@ -160,7 +160,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
                           </div>
                           <button
                             onClick={() => onBookingClick(booking.id)}
-                            className="text-purple-600 hover:text-purple-700 flex-shrink-0"
+                            className="text-brand hover:text-brand-hover flex-shrink-0"
                           >
                             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
@@ -182,7 +182,7 @@ export function MyPage({ user, bookings, loading, onBack, onBookingClick, onRefr
                         </div>
 
                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                          <div className="text-purple-600 text-sm sm:text-base">
+                          <div className="text-brand text-sm sm:text-base">
                             {booking.finalPrice.toLocaleString()}원
                           </div>
                           {booking.status === 'CONFIRMED' && (

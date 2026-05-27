@@ -24,7 +24,7 @@ export function ConfirmationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
@@ -34,7 +34,7 @@ export function ConfirmationPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">예매 정보를 찾을 수 없습니다</p>
-          <button onClick={() => navigate('/')} className="px-6 py-3 bg-purple-600 text-white rounded-lg">
+          <button onClick={() => navigate('/')} className="px-6 py-3 bg-brand text-white rounded-lg">
             홈으로
           </button>
         </div>
@@ -55,7 +55,7 @@ export function ConfirmationPage() {
 
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden mb-6">
           {/* 티켓 헤더 */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-brand to-accent p-6 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Ticket className="w-8 h-8" />
@@ -77,11 +77,11 @@ export function ConfirmationPage() {
 
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-3 text-gray-600">
-                <Calendar className="w-5 h-5 text-purple-600" />
+                <Calendar className="w-5 h-5 text-brand" />
                 <span>{dayjs(booking.scheduledAt).format('YYYY년 MM월 DD일 HH:mm')}</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
-                <MapPin className="w-5 h-5 text-purple-600" />
+                <MapPin className="w-5 h-5 text-brand" />
                 <span>{booking.venue}</span>
               </div>
             </div>
@@ -93,7 +93,7 @@ export function ConfirmationPage() {
                 {booking.seats.map((seat, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm"
+                    className="px-3 py-1.5 bg-brand-soft text-brand-soft-fg rounded-lg text-sm"
                   >
                     {seat.zone} {seat.rowLabel}{seat.number}
                   </span>
@@ -118,15 +118,15 @@ export function ConfirmationPage() {
                 )}
                 <div className="flex justify-between pt-2 border-t border-gray-200 font-medium">
                   <span className="text-gray-900">최종 결제 금액</span>
-                  <span className="text-purple-600">{booking.finalPrice.toLocaleString()}원</span>
+                  <span className="text-brand">{booking.finalPrice.toLocaleString()}원</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="bg-accent-soft border border-neutral-200 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <CreditCard className="w-5 h-5 text-blue-600" />
-                <p className="text-sm text-blue-900">결제 완료</p>
+                <CreditCard className="w-5 h-5 text-accent" />
+                <p className="text-sm text-accent-soft-fg">결제 완료</p>
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function ConfirmationPage() {
           {/* QR 섹션 */}
           <div className="bg-gray-50 p-6 text-center">
             <div className="inline-block bg-white p-4 rounded-xl mb-3">
-              <div className="w-32 h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded flex items-center justify-center">
+              <div className="w-32 h-32 bg-gradient-to-br from-brand-soft to-accent-soft rounded flex items-center justify-center">
                 <div className="text-4xl">🎫</div>
               </div>
             </div>
@@ -154,13 +154,13 @@ export function ConfirmationPage() {
         <div className="flex gap-4">
           <button
             onClick={() => navigate('/')}
-            className="flex-1 py-4 bg-white text-purple-600 border-2 border-purple-600 rounded-xl hover:bg-purple-50 transition-colors"
+            className="flex-1 py-4 bg-white text-brand border-2 border-brand rounded-xl hover:bg-brand-soft transition-colors"
           >
             홈으로
           </button>
           <button
             onClick={() => navigate('/mypage')}
-            className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-colors"
+            className="flex-1 py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-colors"
           >
             예매 내역 보기
           </button>

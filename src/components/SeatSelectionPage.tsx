@@ -103,7 +103,7 @@ export function SeatSelectionPage({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ export function SeatSelectionPage({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <button onClick={onBack} className="px-6 py-3 bg-purple-600 text-white rounded-lg">
+          <button onClick={onBack} className="px-6 py-3 bg-brand text-white rounded-lg">
             돌아가기
           </button>
         </div>
@@ -161,7 +161,7 @@ export function SeatSelectionPage({
                       }}
                       className={`px-4 py-2 rounded-lg text-sm transition-colors ${
                         activeZoneId === zone.id
-                          ? 'bg-purple-600 text-white'
+                          ? 'bg-brand text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
@@ -175,15 +175,15 @@ export function SeatSelectionPage({
               </div>
 
               {/* 스테이지 */}
-              <div className="bg-gradient-to-b from-purple-100 to-purple-50 rounded-t-full py-3 sm:py-4 text-center mb-6">
-                <span className="text-sm sm:text-base text-purple-900">STAGE</span>
+              <div className="bg-gradient-to-b from-brand-soft to-brand-soft rounded-t-full py-3 sm:py-4 text-center mb-6">
+                <span className="text-sm sm:text-base text-brand-soft-fg">STAGE</span>
               </div>
 
               {/* 좌석 범례 */}
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 {[
-                  { color: 'bg-purple-200', label: '선택 가능' },
-                  { color: 'bg-purple-600', label: '선택됨' },
+                  { color: 'bg-neutral-200', label: '선택 가능' },
+                  { color: 'bg-brand', label: '선택됨' },
                   { color: 'bg-gray-300', label: '예매완료' },
                 ].map(({ color, label }) => (
                   <div key={label} className="flex items-center gap-2">
@@ -215,8 +215,8 @@ export function SeatSelectionPage({
                                 onClick={() => toggleSeat(seat)}
                                 disabled={isOccupied}
                                 className={`w-7 h-7 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded text-xs sm:text-sm transition-all
-                                  ${isSelected ? 'bg-purple-600 text-white ring-2 ring-purple-400' : ''}
-                                  ${!isSelected && !isOccupied ? 'bg-purple-200 hover:bg-purple-300 text-purple-900' : ''}
+                                  ${isSelected ? 'bg-brand text-white ring-2 ring-brand-ring' : ''}
+                                  ${!isSelected && !isOccupied ? 'bg-neutral-200 hover:bg-neutral-300 text-gray-900' : ''}
                                   ${isOccupied ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : ''}
                                 `}
                               >
@@ -243,7 +243,7 @@ export function SeatSelectionPage({
               {activeZone && (
                 <div className="mb-4 pb-4 border-b border-gray-200">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-purple-600" />
+                    <MapPin className="w-4 h-4 text-brand" />
                     <span>
                       {activeZone.name} — {activeZone.price.toLocaleString()}원/석
                     </span>
@@ -264,7 +264,7 @@ export function SeatSelectionPage({
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center gap-2">
-                          <Ticket className="w-4 h-4 text-purple-600" />
+                          <Ticket className="w-4 h-4 text-brand" />
                           <span className="text-sm text-gray-900">
                             {seat.rowLabel}{seat.number}
                           </span>
@@ -290,7 +290,7 @@ export function SeatSelectionPage({
                     onChange={(e) =>
                       setSelectedCouponId(e.target.value ? Number(e.target.value) : undefined)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent"
                   >
                     <option value="">쿠폰 선택 안함</option>
                     {coupons.map((c) => (
@@ -324,7 +324,7 @@ export function SeatSelectionPage({
                 )}
                 <div className="flex justify-between pt-2 border-t border-gray-200">
                   <span className="text-gray-900">최종 금액</span>
-                  <span className="text-purple-600">{finalPrice.toLocaleString()}원</span>
+                  <span className="text-brand">{finalPrice.toLocaleString()}원</span>
                 </div>
               </div>
 
@@ -337,7 +337,7 @@ export function SeatSelectionPage({
               <button
                 onClick={handleConfirm}
                 disabled={selectedSeatIds.length === 0 || submitting}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -350,8 +350,8 @@ export function SeatSelectionPage({
                 )}
               </button>
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <ul className="text-xs text-blue-700 space-y-1">
+              <div className="mt-4 p-3 bg-accent-soft rounded-lg">
+                <ul className="text-xs text-accent-soft-fg space-y-1">
                   <li>• 최대 4석까지 선택 가능합니다.</li>
                   <li>• 예매 취소는 공연 3일 전까지 가능합니다.</li>
                 </ul>

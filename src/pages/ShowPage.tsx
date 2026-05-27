@@ -23,7 +23,7 @@ export function ShowPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand" />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function ShowPage() {
           <h1 className="text-gray-900 mb-4">공연을 찾을 수 없습니다</h1>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-6 py-3 bg-brand text-white rounded-lg hover:bg-brand-hover"
           >
             메인으로 돌아가기
           </button>
