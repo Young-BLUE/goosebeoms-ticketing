@@ -1,80 +1,127 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import { preparePayment, confirmPayment, getBooking } from '../api/bookings';
-import type { BookingResponse } from '../api/types';
+import type { BookingResponse, PaymentPrepareResponse } from '../api/types';
 import { Loader2 } from 'lucide-react';
 import dayjs from 'dayjs';
+
+// 토스 SDK v2의 widgets 반환 타입 — export 안 되어 있어 utility로 추출
+type TossPayments = Awaited<ReturnType<typeof loadTossPayments>>;
+type TossWidgets = Awaited<ReturnType<TossPayments['widgets']>>;
 
 export function PaymentPage() {
   const navigate = useNavigate();
   const { bookingId } = useParams<{ bookingId: string }>();
   const location = useLocation();
+
   const [booking, setBooking] = useState<BookingResponse | null>(null);
+  const [prepare, setPrepare] = useState<PaymentPrepareResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const widgetsRef = useRef<TossWidgets | null>(null);
+  const mountedRef = useRef(false);  // StrictMode 중복 mount 가드 (위젯 mount용)
+  const preparedRef = useRef(false); // StrictMode 중복 prepare 가드 (POST 멱등성 X)
 
-  // 결제 콜백에서 돌아온 경우 처리
+  // 결제 콜백에서 돌아온 경우 (토스가 successUrl로 리다이렉트)
   const searchParams = new URLSearchParams(location.search);
   const paymentKey = searchParams.get('paymentKey');
   const orderId = searchParams.get('orderId');
   const amount = searchParams.get('amount');
+  const isCallback = !!(paymentKey && orderId && amount);
 
+  // 콜백 — 백엔드에 결제 confirm 요청
   useEffect(() => {
-    if (!bookingId) return;
+    if (!bookingId || !isCallback) return;
+    confirmPayment(Number(bookingId), {
+      paymentKey: paymentKey!,
+      orderId: orderId!,
+      amount: Number(amount),
+    })
+      .then((b) =>
+        navigate(`/booking/${bookingId}/confirmation`, { state: { booking: b } }),
+      )
+      .catch((err) => {
+        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        setError(msg ?? '결제 확인에 실패했습니다');
+        setLoading(false);
+      });
+  }, [bookingId, isCallback, paymentKey, orderId, amount, navigate]);
 
-    // 토스 결제 완료 후 리다이렉트된 경우
-    if (paymentKey && orderId && amount) {
-      confirmPayment(Number(bookingId), {
-        paymentKey,
-        orderId,
-        amount: Number(amount),
+  // 일반 진입 — booking + prepare 병렬 로드.
+  // preparePayment 는 POST 라 멱등하지 않으므로 ref 가드로 StrictMode 두 번 실행을 방지.
+  // cleanup 의 cancelled flag 를 쓰면 ref 가드와 충돌해서 (첫 closure 만 cancel=true 가 되고
+  // 두 번째 effect 는 ref 로 막혀 새 cancelled 가 안 생김) state 업데이트가 영원히 누락됨.
+  useEffect(() => {
+    if (!bookingId || isCallback || preparedRef.current) return;
+    preparedRef.current = true;
+
+    Promise.all([
+      getBooking(Number(bookingId)),
+      preparePayment(Number(bookingId)),
+    ])
+      .then(([b, p]) => {
+        setBooking(b);
+        setPrepare(p);
       })
-        .then((b) => navigate(`/booking/${bookingId}/confirmation`, { state: { booking: b } }))
-        .catch((err) => {
-          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-          setError(msg ?? '결제 확인에 실패했습니다');
-          setLoading(false);
-        });
-      return;
-    }
+      .catch((err) => {
+        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        setError(msg ?? '결제 정보를 불러오는데 실패했습니다');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [bookingId, isCallback]);
 
-    getBooking(Number(bookingId))
-      .then(setBooking)
-      .catch(() => setError('예매 정보를 불러오는데 실패했습니다'))
-      .finally(() => setLoading(false));
-  }, [bookingId, paymentKey, orderId, amount, navigate]);
+  // 토스 결제위젯 mount — prepare/booking 준비 후 한 번만 실행.
+  // mountedRef 가드가 있으므로 cancelled flag/cleanup 은 사용하지 않는다 (위 effect 와 같은 이유).
+  useEffect(() => {
+    if (!prepare || !booking || mountedRef.current) return;
+    mountedRef.current = true;
 
-  const handlePay = async (method: 'CARD' | 'VIRTUAL_ACCOUNT') => {
-    if (!bookingId || !booking) return;
+    (async () => {
+      try {
+        const tossPayments = await loadTossPayments(prepare.clientKey);
+        // customerKey 는 사용자 식별자. email로 충분.
+        const widgets = tossPayments.widgets({ customerKey: prepare.customerEmail });
+        widgetsRef.current = widgets;
+
+        await widgets.setAmount({ currency: 'KRW', value: prepare.amount });
+
+        // variantKey 는 토스 결제위젯 어드민에서 만든 커스텀 디자인 ID.
+        // 우리 상점은 별도 디자인을 만들지 않으므로 생략 → 토스가 내부 기본 UI 사용.
+        await Promise.all([
+          widgets.renderPaymentMethods({ selector: '#payment-method' }),
+          widgets.renderAgreement({ selector: '#agreement' }),
+        ]);
+
+        setWidgetReady(true);
+      } catch (err) {
+        const msg = (err as { message?: string })?.message;
+        setError(msg ?? '결제 위젯 로딩에 실패했습니다');
+      }
+    })();
+  }, [prepare, booking]);
+
+  const handlePay = async () => {
+    if (!widgetsRef.current || !booking || !prepare || !bookingId) return;
     setPaying(true);
     setError(null);
     try {
-      const prepare = await preparePayment(Number(bookingId), method);
-      const tossPayments = await loadTossPayments(prepare.clientKey);
-      const payment = tossPayments.payment({ customerKey: prepare.customerEmail });
-
-      const common = {
-        amount: { currency: 'KRW', value: prepare.amount },
+      await widgetsRef.current.requestPayment({
         orderId: prepare.orderId,
         orderName: booking.showTitle,
-        customerEmail: prepare.customerEmail,
-        customerName: prepare.customerName,
         successUrl: `${window.location.origin}/booking/${bookingId}/payment?`,
         failUrl: `${window.location.origin}/booking/${bookingId}/payment`,
-      };
-
-      // method 리터럴을 정적으로 좁혀야 토스 SDK requestPayment 의 오버로드가 매칭됨
-      if (method === 'CARD') {
-        await payment.requestPayment({ method: 'CARD', ...common });
-      } else {
-        await payment.requestPayment({ method: 'VIRTUAL_ACCOUNT', ...common });
-      }
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        customerEmail: prepare.customerEmail,
+        customerName: prepare.customerName,
+      });
+      // 정상 흐름에선 successUrl 로 리다이렉트되어 여기 도달 안 함
+    } catch (err) {
+      const msg = (err as { message?: string })?.message;
       setError(msg ?? '결제 요청에 실패했습니다');
-    } finally {
       setPaying(false);
     }
   };
@@ -87,12 +134,15 @@ export function PaymentPage() {
     );
   }
 
-  if (!booking) {
+  if (!booking || !prepare) {
     return (
       <div className="min-h-screen flex items-center justify-center text-center">
         <div>
-          <p className="text-red-500 mb-4">{error ?? '예매 정보를 찾을 수 없습니다'}</p>
-          <button onClick={() => navigate('/')} className="px-6 py-3 bg-brand text-white rounded-lg">
+          <p className="text-red-500 mb-4">{error ?? '결제 정보를 찾을 수 없습니다'}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-3 bg-brand text-white rounded-lg"
+          >
             홈으로
           </button>
         </div>
@@ -137,30 +187,31 @@ export function PaymentPage() {
             </div>
           </div>
 
+          {/* 토스 결제위젯 mount 영역 */}
+          <div id="payment-method" className="mb-2" />
+          <div id="agreement" className="mb-4" />
+
+          {!widgetReady && !error && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              결제 위젯을 불러오는 중...
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* 결제 수단 */}
-          <div className="space-y-3">
-            <button
-              onClick={() => handlePay('CARD')}
-              disabled={paying}
-              className="w-full py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              신용카드로 결제
-            </button>
-            <button
-              onClick={() => handlePay('VIRTUAL_ACCOUNT')}
-              disabled={paying}
-              className="w-full py-4 border-2 border-brand text-brand rounded-xl hover:bg-brand-soft transition-all disabled:opacity-60"
-            >
-              가상계좌로 결제
-            </button>
-          </div>
+          <button
+            onClick={handlePay}
+            disabled={!widgetReady || paying}
+            className="w-full py-4 bg-gradient-to-r from-brand to-accent text-white rounded-xl hover:from-brand-hover hover:to-accent-hover transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {paying ? '처리 중...' : `${booking.finalPrice.toLocaleString()}원 결제하기`}
+          </button>
         </div>
 
         <button
