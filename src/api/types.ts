@@ -57,14 +57,28 @@ export interface SeatResponse {
   zoneId?: number;
 }
 
+// 좌석 상태 변경 이벤트 — SSE `seat-status` 페이로드
+export interface SeatStatusChange {
+  seatId: number;
+  status: 'AVAILABLE' | 'HELD' | 'BOOKED';
+  statusLabel?: string;
+}
+
+export interface SeatStatusEvent {
+  scheduleId: number;
+  changes: SeatStatusChange[];
+}
+
 // Queue
 export interface QueueStatusResponse {
   state: 'WAITING' | 'ACTIVE' | 'NONE';
-  position: number | null;
-  ahead: number | null;
-  etaSeconds: number | null;
-  token: string | null;
-  expiresAt: number | null;
+  position: number | null;       // 내 순번 (1부터)
+  ahead: number | null;          // 내 앞 사람 수
+  behind: number | null;         // 내 뒤 사람 수
+  totalWaiting: number | null;   // 전체 대기 인원
+  etaSeconds: number | null;     // 예상 대기 시간(초)
+  token: string | null;          // ACTIVE 일 때만
+  expiresAt: number | null;      // ACTIVE 토큰 만료 epoch(ms)
 }
 
 // Coupons

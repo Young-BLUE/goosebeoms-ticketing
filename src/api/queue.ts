@@ -15,6 +15,31 @@ export async function leaveQueue(scheduleId: number): Promise<void> {
   await apiClient.post(`/queue/${scheduleId}/leave`);
 }
 
+// 시연용 dev API — 백엔드 dev 프로파일에서만 작동.
+// 가짜 대기자를 큐 앞쪽에 추가해서 rank 줄어드는 모습을 시연한다.
+export interface QueueSeedResponse {
+  seeded: number;
+  removedGhosts: number;
+  totalWaiting: number;
+}
+
+export async function seedQueueGhosts(
+  scheduleId: number,
+  count = 500,
+): Promise<QueueSeedResponse> {
+  const res = await apiClient.post<ApiResponse<QueueSeedResponse>>(
+    `/dev/queue/${scheduleId}/seed?count=${count}`,
+  );
+  return res.data.data;
+}
+
+export async function clearQueueGhosts(scheduleId: number): Promise<QueueSeedResponse> {
+  const res = await apiClient.delete<ApiResponse<QueueSeedResponse>>(
+    `/dev/queue/${scheduleId}/seed`,
+  );
+  return res.data.data;
+}
+
 export function subscribeQueue(
   scheduleId: number,
   onStatus: (status: QueueStatusResponse) => void,

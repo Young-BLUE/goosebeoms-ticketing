@@ -1,9 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, MapPin, Ticket, X, Loader2 } from 'lucide-react';
-import { getZones, getSeats } from '../api/schedules';
+import { getZones, getSeats, subscribeSeats } from '../api/schedules';
 import { getMyCoupons } from '../api/coupons';
 import { holdBooking } from '../api/bookings';
-import type { ZoneResponse, SeatResponse, UserCouponResponse } from '../api/types';
+import type {
+  ZoneResponse,
+  SeatResponse,
+  UserCouponResponse,
+  SeatStatusEvent,
+} from '../api/types';
 
 interface SeatSelectionPageProps {
   scheduleId: number;
@@ -11,11 +16,6 @@ interface SeatSelectionPageProps {
   onBack: () => void;
   onComplete: (bookingId: number) => void;
 }
-
-// 좌석 격자 최소 크기 — 백엔드 데이터가 부족할 때 시드로 채워 공연장 느낌을 살린다.
-// 시드 좌석은 음수 ID로 부여되며 holdBooking 호출 시 백엔드가 거부할 수 있다.
-const MIN_ROWS = 10;
-const MIN_COLS = 18;
 
 // 좌석 등급 — zone.name의 명시적 표기 우선, 없으면 가격 ranking으로 결정.
 type ZoneTier = 'vip' | 'r' | 's' | 'a';
@@ -64,147 +64,6 @@ const TIER_STYLES: Record<ZoneTier, { seat: string; dot: string; badge: string; 
   },
 };
 
-// 시드 좌석에 적용되는 "이미 예매됨" 분포 프리셋.
-// 페이지 진입할 때마다 무작위로 하나가 선택되어 좌석 점유 양상이 달라진다.
-type PrebookedPattern = (
-  rowIdx: number,
-  colIdx: number,
-  rowCount: number,
-  colCount: number,
-  rand: () => number,
-) => boolean;
-
-const PREBOOKED_PATTERNS: PrebookedPattern[] = [
-  (r, c, rC, cC, rnd) => {
-    const midRow = r >= rC * 0.2 && r <= rC * 0.65;
-    const midCol = c >= cC * 0.25 && c <= cC * 0.75;
-    return midRow && midCol && rnd() < 0.55;
-  },
-  (_r, _c, _rC, _cC, rnd) => rnd() < 0.22,
-  (r, _c, rC, _cC, rnd) => rnd() < (r / Math.max(rC - 1, 1)) * 0.7 + 0.05,
-  (r, _c, rC, _cC, rnd) => rnd() < (1 - r / Math.max(rC - 1, 1)) * 0.7 + 0.05,
-  (r, _c, _rC, _cC, rnd) => r % 2 === 0 && rnd() < 0.65,
-  (_r, c, _rC, cC, rnd) => {
-    const center = (cC - 1) / 2;
-    const dist = center === 0 ? 0 : Math.abs(c - center) / center;
-    return rnd() < (1 - dist) * 0.55;
-  },
-];
-
-// 시드 기반 PRNG — 같은 seed 면 같은 분포가 재현되어 zone 전환에도 점유가 안정적이다.
-function mulberry32(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// 한 floor의 모든 zone을 하나의 격자로 통합. 격자 크기는 zone 중 max 값(최소 MIN_*).
-function getFloorGridSize(floorZones: ZoneResponse[]): { rowCount: number; columnCount: number } {
-  if (floorZones.length === 0) return { rowCount: MIN_ROWS, columnCount: MIN_COLS };
-  return {
-    rowCount: Math.max(MIN_ROWS, ...floorZones.map((z) => z.rowCount || 0)),
-    columnCount: Math.max(MIN_COLS, ...floorZones.map((z) => z.columnCount || 0)),
-  };
-}
-
-// 좌석 "선호도 점수" — 낮을수록 좋은 자리 (앞쪽 중앙=0, 뒤쪽 가장자리=1).
-// 행 가중치 0.55, 중앙 거리 가중치 0.45 — 앞자리 우대를 살짝 강하게.
-function getSeatScore(
-  rowIdx: number,
-  colIdx: number,
-  totalRows: number,
-  totalCols: number,
-): number {
-  const center = (totalCols - 1) / 2;
-  const distFromCenter = center === 0 ? 0 : Math.abs(colIdx - center) / center;
-  const rowRatio = totalRows <= 1 ? 0 : rowIdx / (totalRows - 1);
-  return rowRatio * 0.55 + distFromCenter * 0.45;
-}
-
-// 1층 전체 좌석을 위치 점수 순(좋은 자리부터) 정렬 → zone의 availableSeats 비율로 등급 영역 할당.
-// 결과: "rowIdx-colIdx" key → ZoneTier. 좋은 자리=VIP, 가장자리/뒷줄=R/S/A.
-function assignSeatTiers(
-  rowCount: number,
-  columnCount: number,
-  floorZones: ZoneResponse[],
-): Map<string, ZoneTier> {
-  const map = new Map<string, ZoneTier>();
-  if (floorZones.length === 0) return map;
-  const sortedZones = [...floorZones].sort((a, b) => b.price - a.price);
-  const totalSeats = rowCount * columnCount;
-  const totalAvailable = sortedZones.reduce(
-    (sum, z) => sum + Math.max(z.availableSeats || 0, 0),
-    0,
-  );
-  // zone별 격자 점유 비율 — availableSeats 비율로 분배(데이터 없으면 균등)
-  const buckets = sortedZones.map((z) => ({
-    tier: getZoneTier(z, sortedZones),
-    size:
-      totalAvailable > 0
-        ? Math.max(1, Math.round((Math.max(z.availableSeats || 0, 0) / totalAvailable) * totalSeats))
-        : Math.floor(totalSeats / sortedZones.length),
-  }));
-  // 좌표 + 점수 → 점수 오름차순(좋은 자리부터)
-  const scored: { row: number; col: number; score: number }[] = [];
-  for (let r = 0; r < rowCount; r++) {
-    for (let c = 0; c < columnCount; c++) {
-      scored.push({ row: r, col: c, score: getSeatScore(r, c, rowCount, columnCount) });
-    }
-  }
-  scored.sort((a, b) => a.score - b.score);
-  // 좋은 자리부터 등급 영역 순서대로 채움
-  let cursor = 0;
-  for (const b of buckets) {
-    for (let i = 0; i < b.size && cursor < scored.length; i++) {
-      const s = scored[cursor++];
-      map.set(`${s.row}-${s.col}`, b.tier);
-    }
-  }
-  // 남은 좌석은 가장 낮은 등급으로
-  const fallback = buckets[buckets.length - 1]?.tier ?? 'a';
-  while (cursor < scored.length) {
-    const s = scored[cursor++];
-    map.set(`${s.row}-${s.col}`, fallback);
-  }
-  return map;
-}
-
-// 1층 통합 격자 생성. floor의 모든 zone을 합친 좌석 격자 + 백엔드 좌석 덮어쓰기.
-function buildFloorSeatGrid(
-  floorZones: ZoneResponse[],
-  backendSeats: SeatResponse[],
-  rowCount: number,
-  columnCount: number,
-  prebookedKeys: Set<string>,
-): SeatResponse[] {
-  const aBase = 'A'.charCodeAt(0);
-  const map = new Map<string, SeatResponse>();
-  let synthId = -1_000_000 - (floorZones[0]?.id ?? 0) * 10_000;
-  for (let r = 0; r < rowCount; r++) {
-    const rowLabel = String.fromCharCode(aBase + r);
-    for (let n = 1; n <= columnCount; n++) {
-      const key = `${rowLabel}-${n}`;
-      map.set(key, {
-        id: synthId--,
-        rowLabel,
-        number: n,
-        status: prebookedKeys.has(key) ? 'BOOKED' : 'AVAILABLE',
-        zoneId: floorZones[0]?.id,
-      });
-    }
-  }
-  // 백엔드 좌석이 있으면 시드보다 우선
-  for (const s of backendSeats) {
-    map.set(`${s.rowLabel}-${s.number}`, s);
-  }
-  return Array.from(map.values());
-}
-
 // 백엔드가 floor 정보를 주지 않으므로 zone.name 패턴 추론 → 실패 시 zones 절반씩 분배.
 function groupZonesByFloor(zones: ZoneResponse[]): { label: string; zones: ZoneResponse[] }[] {
   if (zones.length === 0) return [];
@@ -244,7 +103,8 @@ export function SeatSelectionPage({
   onComplete,
 }: SeatSelectionPageProps) {
   const [zones, setZones] = useState<ZoneResponse[]>([]);
-  const [seats, setSeats] = useState<SeatResponse[]>([]);
+  // 좌석 데이터 — id → SeatResponse 맵. SSE 부분 갱신을 위해 Map 자료형.
+  const [seatsById, setSeatsById] = useState<Map<number, SeatResponse>>(new Map());
   const [coupons, setCoupons] = useState<UserCouponResponse[]>([]);
   const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState<number | undefined>(undefined);
@@ -252,93 +112,134 @@ export function SeatSelectionPage({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const esRef = useRef<EventSource | null>(null);
 
+  // 초기 로드 — zones 가져온 뒤 zone별 seats를 병렬로 페치. SSE 구독으로 실시간 갱신.
   useEffect(() => {
-    Promise.all([getZones(scheduleId), getSeats(scheduleId), getMyCoupons().catch(() => [])])
-      .then(([z, s, c]) => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [z, c] = await Promise.all([
+          getZones(scheduleId),
+          getMyCoupons().catch(() => [] as UserCouponResponse[]),
+        ]);
+        if (cancelled) return;
         setZones(z);
-        setSeats(s);
         setCoupons(c.filter((c) => c.status === 'ISSUED'));
-      })
-      .catch(() => setError('좌석 정보를 불러오는데 실패했습니다'))
-      .finally(() => setLoading(false));
+
+        // zone마다 따로 좌석 페치 (백엔드 계약: ?zoneId=N)
+        const seatBuckets = await Promise.all(
+          z.map((zone) => getSeats(scheduleId, zone.id).catch(() => [] as SeatResponse[])),
+        );
+        if (cancelled) return;
+        const map = new Map<number, SeatResponse>();
+        for (let i = 0; i < z.length; i++) {
+          for (const s of seatBuckets[i]) {
+            // 응답에 zoneId가 없으면 호출 컨텍스트로 채워 넣음 (그리드 분배에 필요)
+            map.set(s.id, { ...s, zoneId: s.zoneId ?? z[i].id });
+          }
+        }
+        setSeatsById(map);
+
+        // SSE 구독 — 다른 사용자의 hold/booking/release 가 들어오면 부분 갱신
+        const es = subscribeSeats(
+          scheduleId,
+          (ev: SeatStatusEvent) => {
+            if (cancelled) return;
+            setSeatsById((prev) => {
+              const next = new Map(prev);
+              for (const ch of ev.changes) {
+                const existing = next.get(ch.seatId);
+                if (existing) next.set(ch.seatId, { ...existing, status: ch.status });
+              }
+              return next;
+            });
+          },
+          () => {
+            // SSE 끊김은 치명적이지 않음 (스냅샷은 이미 있음). 로그만 남김.
+            console.warn('seat SSE disconnected');
+          },
+        );
+        esRef.current = es;
+      } catch {
+        if (!cancelled) setError('좌석 정보를 불러오는데 실패했습니다');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+      esRef.current?.close();
+    };
   }, [scheduleId]);
 
   const floors = useMemo(() => groupZonesByFloor(zones), [zones]);
   const activeFloor = floors[activeFloorIdx] ?? floors[0];
   const floorZones = useMemo(() => activeFloor?.zones ?? [], [activeFloor]);
 
+  // 첫 번째가 아닌 floor는 "상층(발코니)"으로 취급 — 좌석 크기/모양 차별화
+  const isUpperFloor = activeFloorIdx > 0;
+
   // floor 전환 시 선택 좌석 초기화
   useEffect(() => {
     setSelectedSeatIds([]);
   }, [activeFloorIdx]);
 
-  // 첫 번째가 아닌 floor는 "상층(발코니)"으로 취급 — 좌석 크기/모양 차별화
-  const isUpperFloor = activeFloorIdx > 0;
+  // zone → 등급 매핑 + zone 정렬(가격 내림차순: VIP가 무대 가까이)
+  const zoneTierMap = useMemo(() => {
+    const m: Record<number, ZoneTier> = {};
+    for (const z of zones) m[z.id] = getZoneTier(z, zones);
+    return m;
+  }, [zones]);
 
-  // 1층 통합 격자 크기 + 위치 기반 등급 배치
-  const { rowCount: floorRows, columnCount: floorCols } = useMemo(
-    () => getFloorGridSize(floorZones),
+  const sortedFloorZones = useMemo(
+    () =>
+      [...floorZones].sort(
+        (a, b) => b.price - a.price || a.id - b.id, // 결정론적 — 같은 가격이면 id asc
+      ),
     [floorZones],
   );
-  const seatTierMap = useMemo(
-    () => assignSeatTiers(floorRows, floorCols, floorZones),
-    [floorRows, floorCols, floorZones],
-  );
-  // 등급별 대표 zone (가격 표시/계산용) — 같은 등급에 여러 zone 있으면 가격 가장 높은 zone
+
+  // 등급별 대표 zone (상단 등급 안내 카드용)
   const tierZoneMap = useMemo(() => {
     const m: Partial<Record<ZoneTier, ZoneResponse>> = {};
-    const sortedZones = [...floorZones].sort((a, b) => b.price - a.price);
-    for (const z of sortedZones) {
-      const t = getZoneTier(z, sortedZones);
+    for (const z of sortedFloorZones) {
+      const t = zoneTierMap[z.id] ?? 'a';
       if (!(t in m)) m[t] = z;
     }
     return m;
-  }, [floorZones]);
+  }, [sortedFloorZones, zoneTierMap]);
 
-  // 진입할 때마다 새 seed/패턴 — scheduleId가 바뀌면 다시 결정
-  const prebookSeed = useMemo(() => Math.floor(Math.random() * 1_000_000) + 1, [scheduleId]);
-  const prebookedPattern = useMemo(
-    () => PREBOOKED_PATTERNS[Math.floor(Math.random() * PREBOOKED_PATTERNS.length)],
-    [scheduleId],
-  );
-
-  // 1층 격자의 백엔드 좌석들 + 시드 좌석(랜덤 BOOKED 적용)
-  const floorSeats = useMemo(() => {
-    if (floorZones.length === 0) return [];
-    // floor 라벨을 seed에 섞어 floor별로 다른 점유 분포
-    const floorKey = activeFloor?.label.charCodeAt(0) ?? 0;
-    const rand = mulberry32(prebookSeed + floorKey * 7919);
-    const prebookedKeys = new Set<string>();
-    for (let r = 0; r < floorRows; r++) {
-      for (let c = 0; c < floorCols; c++) {
-        if (prebookedPattern(r, c, floorRows, floorCols, rand)) {
-          prebookedKeys.add(`${String.fromCharCode(65 + r)}-${c + 1}`);
-        }
+  // 좌석을 zoneId 별로 묶고, 각 zone 안에서 (rowLabel, number) → SeatResponse 맵 생성
+  const seatsByZone = useMemo(() => {
+    const m = new Map<number, Map<string, SeatResponse>>();
+    for (const seat of seatsById.values()) {
+      if (seat.zoneId == null) continue;
+      let inner = m.get(seat.zoneId);
+      if (!inner) {
+        inner = new Map();
+        m.set(seat.zoneId, inner);
       }
+      inner.set(`${seat.rowLabel}-${seat.number}`, seat);
     }
-    const floorZoneIds = new Set(floorZones.map((z) => z.id));
-    const backendSeats = seats.filter((s) => s.zoneId != null && floorZoneIds.has(s.zoneId));
-    return buildFloorSeatGrid(floorZones, backendSeats, floorRows, floorCols, prebookedKeys);
-  }, [floorZones, floorRows, floorCols, seats, prebookSeed, prebookedPattern, activeFloor]);
-
-  // 좌석 → 등급/가격 — 좌석 위치(rowLabel, number)로 seatTierMap에 조회
-  const getSeatTier = (seat: SeatResponse): ZoneTier => {
-    const rowIdx = seat.rowLabel.charCodeAt(0) - 65;
-    const colIdx = seat.number - 1;
-    return seatTierMap.get(`${rowIdx}-${colIdx}`) ?? 'a';
-  };
-  const getSeatPrice = (seat: SeatResponse): number => {
-    const tier = getSeatTier(seat);
-    return tierZoneMap[tier]?.price ?? 0;
-  };
+    return m;
+  }, [seatsById]);
 
   const selectedSeats = useMemo(
-    () => floorSeats.filter((s) => selectedSeatIds.includes(s.id)),
-    [floorSeats, selectedSeatIds],
+    () =>
+      selectedSeatIds
+        .map((id) => seatsById.get(id))
+        .filter((s): s is SeatResponse => s !== undefined),
+    [seatsById, selectedSeatIds],
   );
 
-  const totalPrice = selectedSeats.reduce((sum, seat) => sum + getSeatPrice(seat), 0);
+  const totalPrice = selectedSeats.reduce((sum, seat) => {
+    const zone = zones.find((z) => z.id === seat.zoneId);
+    return sum + (zone?.price ?? 0);
+  }, 0);
 
   const selectedCoupon = coupons.find((c) => c.id === selectedCouponId);
   const discountAmount = selectedCoupon
@@ -366,8 +267,7 @@ export function SeatSelectionPage({
       );
       onComplete(booking.id);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? '예매 홀드에 실패했습니다');
     } finally {
       setSubmitting(false);
@@ -382,7 +282,7 @@ export function SeatSelectionPage({
     );
   }
 
-  if (error && seats.length === 0) {
+  if (error && seatsById.size === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -395,14 +295,11 @@ export function SeatSelectionPage({
     );
   }
 
-  const groupedByRow = floorSeats.reduce<Record<string, SeatResponse[]>>((acc, seat) => {
-    if (!acc[seat.rowLabel]) acc[seat.rowLabel] = [];
-    acc[seat.rowLabel].push(seat);
-    return acc;
-  }, {});
-  const rows = Object.keys(groupedByRow).sort();
   const visibleTiers = TIER_ORDER.filter((t) => tierZoneMap[t]);
   const seatShape = isUpperFloor ? 'rounded-md' : 'rounded-t-md rounded-b';
+  const sizeCls = isUpperFloor
+    ? 'w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-md'
+    : 'w-7 h-7 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-t-lg rounded-b-md';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -447,8 +344,7 @@ export function SeatSelectionPage({
                 </div>
               )}
 
-              {/* 좌석 등급 안내 — zone 탭 자리, 정보성 카드로 변환.
-                  실제 공연장처럼 같은 공간에서 위치에 따라 등급이 자동 결정됨을 안내. */}
+              {/* 좌석 등급 안내 */}
               <div className="mb-6">
                 <h2 className="text-gray-900 mb-3">
                   {floors.length > 1 ? `${activeFloor?.label ?? ''} 좌석 등급 안내` : '좌석 등급 안내'}
@@ -476,11 +372,11 @@ export function SeatSelectionPage({
                   })}
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  좌석 위치(중앙·앞쪽일수록 상위 등급)에 따라 등급이 자동으로 결정됩니다.
+                  무대에 가까운 등급(VIP)이 위쪽, 멀어질수록 하위 등급(R · S)으로 배치됩니다.
                 </p>
               </div>
 
-              {/* STAGE / BALCONY 라벨 */}
+              {/* STAGE / BALCONY */}
               {!isUpperFloor ? (
                 <div className="relative mb-8 sm:mb-10">
                   <div className="absolute inset-x-8 sm:inset-x-16 -bottom-3 h-6 bg-brand/20 blur-2xl" />
@@ -502,12 +398,10 @@ export function SeatSelectionPage({
                 </div>
               )}
 
-              {/* 좌석 상태 범례 — 등급별 색은 위 안내 카드에서, 여긴 선택/완료 상태만 */}
+              {/* 좌석 상태 범례 */}
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`w-5 h-5 sm:w-6 sm:h-6 bg-brand ${seatShape} shadow-sm`}
-                  />
+                  <div className={`w-5 h-5 sm:w-6 sm:h-6 bg-brand ${seatShape} shadow-sm`} />
                   <span className="text-xs sm:text-sm text-gray-600">선택됨</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -518,83 +412,98 @@ export function SeatSelectionPage({
                 </div>
               </div>
 
-              {/* 좌석 배치도 */}
-              {rows.length === 0 ? (
+              {/* 좌석 배치도 — zone마다 격자를 세로로 쌓는다.
+                  무대 가까이 = VIP, 멀수록 = 하위 등급. 가로 가운데 정렬로 무대 중심을 맞춤. */}
+              {sortedFloorZones.length === 0 ? (
                 <p className="text-center text-gray-500 py-8">좌석 정보가 없습니다</p>
               ) : (
                 <div className="overflow-x-auto pb-3 px-2 sm:px-6 lg:px-8">
-                  {/*
-                    w-max: wrapper가 콘텐츠 너비만큼 확장 → 좁은 viewport에서 좌측 좌석이 잘리지 않고 스크롤로 도달 가능.
-                    mx-auto: wrapper가 컨테이너보다 좁으면 가운데 정렬, 더 넓으면 좌측 정렬 + 가로 스크롤.
-                  */}
                   <div
-                    className="w-max mx-auto"
+                    className="w-max mx-auto space-y-8 sm:space-y-10"
                     style={{ perspective: isUpperFloor ? '1200px' : '1600px' }}
                   >
-                    <div
-                      className="space-y-1.5 sm:space-y-2"
-                      style={{
-                        transform: `rotateX(${isUpperFloor ? 18 : 10}deg)`,
-                        transformOrigin: 'top center',
-                      }}
-                    >
-                      {rows.map((row) => {
-                        const seatsInRow = groupedByRow[row].sort((a, b) => a.number - b.number);
-                        const half = Math.ceil(seatsInRow.length / 2);
-                        const leftHalf = seatsInRow.slice(0, half);
-                        const rightHalf = seatsInRow.slice(half);
-                        const sizeCls = isUpperFloor
-                          ? 'w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-md'
-                          : 'w-7 h-7 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-t-lg rounded-b-md';
-                        const renderSeat = (seat: SeatResponse) => {
-                          const isSelected = selectedSeatIds.includes(seat.id);
-                          const isOccupied = seat.status !== 'AVAILABLE';
-                          const tier = getSeatTier(seat);
-                          const tierStyle = TIER_STYLES[tier];
-                          return (
-                            <button
-                              key={seat.id}
-                              onClick={() => toggleSeat(seat)}
-                              disabled={isOccupied}
-                              title={`${seat.rowLabel}${seat.number} · ${tierStyle.label}`}
-                              className={`${sizeCls} text-[10px] sm:text-xs lg:text-sm shadow-sm transition-all
-                                ${isSelected ? 'bg-brand text-white ring-2 ring-brand-ring shadow-md -translate-y-0.5' : ''}
-                                ${!isSelected && !isOccupied ? `${tierStyle.seat} hover:-translate-y-0.5` : ''}
-                                ${isOccupied ? 'bg-gray-300 text-gray-400 cursor-not-allowed opacity-60' : ''}
-                              `}
-                            >
-                              {seat.number}
-                            </button>
-                          );
-                        };
-                        return (
-                          <div
-                            key={row}
-                            className="flex items-center justify-center gap-2 sm:gap-3"
-                          >
-                            <div className="w-5 sm:w-6 text-center text-[10px] sm:text-xs text-gray-500 tabular-nums">
-                              {row}
-                            </div>
-                            <div className="flex items-center gap-1 sm:gap-1.5">
-                              {leftHalf.map(renderSeat)}
-                            </div>
-                            <div
-                              className="w-8 sm:w-12 h-7 sm:h-9 lg:h-10 border-x border-dashed border-gray-300"
+                    {sortedFloorZones.map((zone) => {
+                      const tier = zoneTierMap[zone.id] ?? 'a';
+                      const tierStyle = TIER_STYLES[tier];
+                      const zoneSeatMap = seatsByZone.get(zone.id) ?? new Map<string, SeatResponse>();
+                      const rowCount = Math.max(zone.rowCount || 0, 0);
+                      const colCount = Math.max(zone.columnCount || 0, 0);
+                      if (rowCount === 0 || colCount === 0) return null;
+                      const rowLabels = Array.from({ length: rowCount }, (_, r) =>
+                        String.fromCharCode(65 + r),
+                      );
+
+                      return (
+                        <div key={zone.id} className="flex flex-col items-center">
+                          {/* zone 헤더 — 등급 라벨 + 가격 */}
+                          <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 text-xs sm:text-sm">
+                            <span
                               aria-hidden
+                              className={`inline-block w-2.5 h-2.5 rounded-full ${tierStyle.dot} ring-1 ring-black/10`}
                             />
-                            <div className="flex items-center gap-1 sm:gap-1.5">
-                              {rightHalf.map(renderSeat)}
-                            </div>
-                            <div className="w-5 sm:w-6 text-center text-[10px] sm:text-xs text-gray-500 tabular-nums">
-                              {row}
-                            </div>
+                            <span className="font-medium text-gray-900">{zone.name}</span>
+                            <span className="text-gray-500">
+                              ({zone.price.toLocaleString()}원 · {zone.availableSeats}석 남음)
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="mt-2 text-center text-[10px] sm:text-xs text-gray-400 tracking-[0.3em]">
-                    AISLE
+
+                          <div
+                            className="space-y-1.5 sm:space-y-2"
+                            style={{
+                              transform: `rotateX(${isUpperFloor ? 14 : 8}deg)`,
+                              transformOrigin: 'top center',
+                            }}
+                          >
+                            {rowLabels.map((rowLabel) => (
+                              <div
+                                key={rowLabel}
+                                className="flex items-center justify-center gap-1 sm:gap-1.5"
+                              >
+                                <div className="w-5 sm:w-6 text-center text-[10px] sm:text-xs text-gray-500 tabular-nums">
+                                  {rowLabel}
+                                </div>
+                                <div className="flex items-center gap-1 sm:gap-1.5">
+                                  {Array.from({ length: colCount }, (_, c) => {
+                                    const num = c + 1;
+                                    const seat = zoneSeatMap.get(`${rowLabel}-${num}`);
+                                    if (!seat) {
+                                      // 백엔드 좌석이 없는 셀 → 빈칸 (가짜 ID 생성 금지)
+                                      return (
+                                        <div
+                                          key={`empty-${rowLabel}-${num}`}
+                                          aria-hidden
+                                          className={`${sizeCls} bg-transparent`}
+                                        />
+                                      );
+                                    }
+                                    const isSelected = selectedSeatIds.includes(seat.id);
+                                    const isOccupied = seat.status !== 'AVAILABLE';
+                                    return (
+                                      <button
+                                        key={seat.id}
+                                        onClick={() => toggleSeat(seat)}
+                                        disabled={isOccupied}
+                                        title={`${zone.name} ${seat.rowLabel}${seat.number} · ${tierStyle.label}`}
+                                        className={`${sizeCls} text-[10px] sm:text-xs lg:text-sm shadow-sm transition-all
+                                          ${isSelected ? 'bg-brand text-white ring-2 ring-brand-ring shadow-md -translate-y-0.5' : ''}
+                                          ${!isSelected && !isOccupied ? `${tierStyle.seat} hover:-translate-y-0.5` : ''}
+                                          ${isOccupied ? 'bg-gray-300 text-gray-400 cursor-not-allowed opacity-60' : ''}
+                                        `}
+                                      >
+                                        {seat.number}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div className="w-5 sm:w-6 text-center text-[10px] sm:text-xs text-gray-500 tabular-nums">
+                                  {rowLabel}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -615,7 +524,7 @@ export function SeatSelectionPage({
                 </div>
               )}
 
-              {/* 선택 좌석 — 좌석마다 등급 배지 + 가격 표시 */}
+              {/* 선택 좌석 */}
               <div className="mb-4">
                 <h3 className="text-gray-900 mb-3">선택한 좌석</h3>
                 {selectedSeats.length === 0 ? (
@@ -623,9 +532,10 @@ export function SeatSelectionPage({
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {selectedSeats.map((seat) => {
-                      const tier = getSeatTier(seat);
+                      const zone = zones.find((z) => z.id === seat.zoneId);
+                      const tier = zone ? (zoneTierMap[zone.id] ?? 'a') : 'a';
                       const style = TIER_STYLES[tier];
-                      const price = getSeatPrice(seat);
+                      const price = zone?.price ?? 0;
                       return (
                         <div
                           key={seat.id}
@@ -636,9 +546,7 @@ export function SeatSelectionPage({
                             <span className="text-sm text-gray-900">
                               {seat.rowLabel}{seat.number}
                             </span>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded ${style.badge}`}
-                            >
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${style.badge}`}>
                               {style.label}
                             </span>
                             <span className="text-xs text-gray-500 ml-auto">
