@@ -13,10 +13,11 @@ export async function getShowsPage(params: {
   page: number;
   size?: number;
   category?: string;
+  sort?: string;
 }): Promise<ShowPage> {
-  const { page, size = 12, category } = params;
+  const { page, size = 12, category, sort = 'bookingStartAt,desc' } = params;
   const res = await apiClient.get<ApiResponse<ShowPage>>('/shows', {
-    params: { page, size, ...(category ? { category } : {}) },
+    params: { page, size, sort, ...(category ? { category } : {}) },
   });
   return res.data.data;
 }
